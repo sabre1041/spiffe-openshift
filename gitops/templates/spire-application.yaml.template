@@ -1,0 +1,58 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spire
+  namespace: ${OPENSHIFT_GITOPS_NAMESPACE}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: spire-server
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - helm:
+      valueFiles:
+      - ${DOLLAR}values/examples/production/values.yaml
+      - ${DOLLAR}values/examples/openshift/openshift-values.yaml
+      - ${DOLLAR}values/examples/tornjak/values.yaml
+      - ${DOLLAR}values/examples/tornjak/values-ingress.yaml
+      values: |-
+        global:
+          installAndUpgradeHooks:
+            enabled: false
+          deleteHooks:
+            enabled: false
+          spire:
+            clusterName: test-openshift
+            trustDomain: ${OPENSHIFT_APPS_DOMAIN}
+            namespaces:
+              system:
+                create: true
+        spire-server:
+          ca_subject:
+            country: US
+            organization: Red Hat
+            common_name: ${OPENSHIFT_APPS_DOMAIN}
+          ingress:
+            enabled: true
+        spiffe-oidc-discovery-provider:
+          enable: true
+          ingress:
+            enabled: true
+    path: charts/spire
+    repoURL: ${HELM_REPOSITORY}
+    targetRevision: ${HELM_BRANCH}
+  - ref: values
+    repoURL: ${HELM_REPOSITORY}
+    targetRevision: ${HELM_BRANCH}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: -1
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 10m

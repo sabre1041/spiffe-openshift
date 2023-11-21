@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spire-crds
+  namespace: ${OPENSHIFT_GITOPS_NAMESPACE}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: spire-server
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: charts/spire-crds
+    repoURL: ${HELM_REPOSITORY}
+    targetRevision: ${HELM_BRANCH}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: -1
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 10m
+    managedNamespaceMetadata:
+      labels:
+        security.openshift.io/scc.podSecurityLabelSync: "false"
+        pod-security.kubernetes.io/enforce: privileged
+        pod-security.kubernetes.io/warn: privileged
+        pod-security.kubernetes.io/audit: privileged
+    syncOptions:
+    - CreateNamespace=true
