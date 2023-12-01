@@ -7,12 +7,12 @@ export DOLLAR="$"
 export OPENSHIFT_APPS_DOMAIN=""
 export OPENSHIFT_GITOPS_NAMESPACE="openshift-gitops"
 
-export HELM_REPOSITORY="https://github.com/sabre1041/spiffe-helm-charts-hardened"
-export HELM_BRANCH="spire-namespace-creation"
+export HELM_REPOSITORY="https://github.com/spiffe/helm-charts-hardened"
+export HELM_REVISION="spire-0.16.0"
 OC_TOOL="oc"
 
 function display_help {
-  echo "./$(basename "$0") [ -a | --apps-domain APPS_DOMAIN ] [ -gr | --gitops-namespace NAMESPACE ] [ -h | --help ] [ -hb | --helm-branch BRANCH ] [ -hr | --helm-repository REPOSITORY ] [ -t | --tool TOOL ]
+  echo "./$(basename "$0") [ -a | --apps-domain APPS_DOMAIN ] [ -gr | --gitops-namespace NAMESPACE ] [ -h | --help ] [ -hr | --helm-revision REVISION ] [ -hr | --helm-repository REPOSITORY ] [ -t | --tool TOOL ]
 
 Deployment of Argo CD Applications to support the managment of SPIFFE/SPIRE on OpenShift
 
@@ -20,8 +20,8 @@ Where:
   -a  | --apps-domain       OpenShift 'apps' domain
   -ge | --gitops-namespace  Namespace where Argo CD Applications will be installed within. Defaults to '${OPENSHIFT_GITOPS_NAMESPACE}'
   -h  | --help              Display this help text
-  -hb | --helm-branch       Branch of the repository containing the SPIFFE Helm charts. Defaults to '${HELM_BRANCH}'
   -hb | --helm-repository   Repository containing the SPIFFE Helm charts. Defaults to '${HELM_REPOSITORY}'
+  -hr | --helm-revision     Revision of the repository containing the SPIFFE Helm charts. Defaults to '${HELM_REVISION}'
   -t  | --tool              Tool for communicating with OpenShift cluster. Defaults to '${OC_TOOL}'
 
 "
