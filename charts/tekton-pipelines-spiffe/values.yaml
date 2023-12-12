@@ -1,0 +1,37 @@
+global:
+  appsSubdomain: ""
+
+pipelines:
+  namespace: openshift-pipelines
+chains:
+  controller:
+    name: tekton-chains-controller
+  artifacts:
+    oci:
+      storage: oci
+    pipelinerun:
+      format: in-toto
+      storage: oci
+    taskrun:
+      format: in-toto
+      storage: oci
+
+  signers:
+    x509:
+      fulcio:
+        address: ""
+        enabled: true
+        provider: spiffe
+        issuer: ""
+      tuf:
+        mirror:
+          url: ""
+  transparency:
+    enabled: "true"
+    url: ""
+  tuf:
+    name: tuf
+    mountPath: /tuf
+spiffe:
+  socketMount: /spiffe-workload-api
+  socketFile: spire-agent.sock

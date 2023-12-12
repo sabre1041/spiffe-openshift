@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.chains.controller.name }}
+  namespace: {{ .Values.pipelines.namespace }}
+spec:
+  template:
+    spec:
+      containers:
+      - env:
+        - name: SPIFFE_ENDPOINT_SOCKET
+          value: {{ .Values.spiffe.socketMount }}/{{ .Values.spiffe.socketFile }}
+        - name: TUF_ROOT
+          value: {{ .Values.chains.tuf.mountPath }}
+        volumeMounts:
+        - mountPath: {{ .Values.spiffe.socketMount }}
+          name: {{ .Values.chains.tuf.mountPath }}
+        - mountPath: {{ .Values.chains.tuf.mountPath }}
+          name: tuf
+      - emptyDir: {}
+        name: tuf
+      - csi:
+          driver: csi.spiffe.io
+          readOnly: true
+        name: spiffe-workload-api
