@@ -18,6 +18,7 @@ spec:
           name: {{ .Values.chains.tuf.mountPath }}
         - mountPath: {{ .Values.chains.tuf.mountPath }}
           name: tuf
+      volumes:
       - emptyDir: {}
         name: tuf
       - csi:
