@@ -13,7 +13,7 @@ spec:
     artifacts.taskrun.storage: {{ .Values.chains.artifacts.taskrun.storage }}
     disabled: false
     signers.x509.fulcio.address: {{ required "Fulcio Address is Required" .Values.chains.signers.x509.fulcio.address }}
-    signers.x509.fulcio.enabled: {{ .Values.chains.signers.x509.fulcio.issuer.enabled }}
+    signers.x509.fulcio.enabled: {{ .Values.chains.signers.x509.fulcio.enabled }}
     signers.x509.fulcio.issuer: {{ required "OIDC Issuer Address is Required" .Values.chains.signers.x509.fulcio.issuer }}
     signers.x509.fulcio.provider: {{ .Values.chains.artifacts.taskrun.storage }}
     signers.x509.tuf.mirror.url: {{ required "TUF Address is Required" .Values.chains.signers.x509.tuf.mirror.url }}
