@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: {{ .Values.chains.controller.name }}
   namespace: {{ .Values.pipelines.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-options: Delete=false,ServerSideApply=true
 spec:
   template:
     spec:
