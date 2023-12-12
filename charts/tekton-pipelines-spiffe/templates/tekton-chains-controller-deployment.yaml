@@ -17,7 +17,7 @@ spec:
           value: {{ .Values.chains.tuf.mountPath }}
         volumeMounts:
         - mountPath: {{ .Values.spiffe.socketMount }}
-          name: {{ .Values.chains.tuf.mountPath }}
+          name: spiffe-workload-api
         - mountPath: {{ .Values.chains.tuf.mountPath }}
           name: tuf
       volumes:
