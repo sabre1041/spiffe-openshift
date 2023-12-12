@@ -15,7 +15,7 @@ spec:
     signers.x509.fulcio.address: {{ required "Fulcio Address is Required" .Values.chains.signers.x509.fulcio.address }}
     signers.x509.fulcio.enabled: {{ .Values.chains.signers.x509.fulcio.enabled }}
     signers.x509.fulcio.issuer: {{ required "OIDC Issuer Address is Required" .Values.chains.signers.x509.fulcio.issuer }}
-    signers.x509.fulcio.provider: {{ .Values.chains.artifacts.taskrun.storage }}
+    signers.x509.fulcio.provider: {{ .Values.chains.signers.x509.fulcio.provider }}
     signers.x509.tuf.mirror.url: {{ required "TUF Address is Required" .Values.chains.signers.x509.tuf.mirror.url }}
     transparency.enabled: {{ .Values.chains.transparency.enabled | quote }}
     transparency.url: {{ required "Rekor Address is Required" .Values.chains.transparency.url }}
