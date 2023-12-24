@@ -1,0 +1,81 @@
+schemaVersion: 2.2.0
+attributes:
+  controller.devfile.io/storage-type: per-workspace
+metadata:
+  name: spiffe
+components:
+- name: dev-tools
+  attributes:
+    container-overrides:
+      volumeMounts:
+        - name: spiffe-workload-api
+          mountPath: /spiffe-workload-api
+    pod-overrides:
+      spec:
+        volumes:
+          - name: spiffe-workload-api
+            csi:
+              driver: "csi.spiffe.io"
+              readOnly: true
+  container: 
+    image: quay.io/cgruver0/che/che-dev-image:latest
+    memoryLimit: 6Gi
+    mountSources: true
+    env:
+    - name: SHELL
+      value: "/bin/zsh"
+    - name: HOME
+      value: "/projects/home"
+    - name: HISTFILE
+      value: "/projects/home/.sh_history"
+    - name: SPIFFE_ENDPOINT_SOCKET
+      value: /spiffe-workload-api/spire-agent.sock
+    volumeMounts:
+    - name: home
+      path: /projects/home
+- volume:
+    size: 10Gi
+  name: projects
+- volume:
+    size: 4Gi
+  name: home
+- name: oc-cli
+  container:
+    args:
+      - '-c'
+      - >-
+        mkdir -p /projects/bin && cp /usr/bin/oc /projects/bin/oc && cp /usr/bin/kubectl /projects/bin/kubectl
+    command:
+      - /bin/bash
+    image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+    sourceMapping: /projects
+    mountSources: true
+    memoryLimit: 256M
+- name: rhtas-clis
+  container:
+    args:
+      - '-c'
+      - >-
+        mkdir -p /projects/home/bin && gunzip -c /var/www/html/clients/linux/cosign.gz > /projects/home/bin/cosign && chmod +x /projects/home/bin/cosign && gunzip -c /var/www/html/clients/linux/gitsign.gz > /projects/home/bin/gitsign && chmod +x /projects/home/bin/gitsign && gunzip -c /var/www/html/clients/linux/rekor-cli.gz > /projects/home/bin/rekor-cli && chmod +x /projects/home/bin/rekor-cli
+    command:
+      - /bin/bash
+    image: quay.io/redhat-user-workloads/rhtas-tenant/rhtas-stack-1-0-beta/client-server:57947b4ffed92ff3082f6fac01aabd2c69ba4c2d
+    sourceMapping: /projects
+    mountSources: true
+    memoryLimit: 256M
+    volumeMounts:
+    - name: home
+      path: /projects/home
+commands:
+- apply:
+    component: oc-cli
+    label: Copy OpenShift CLI
+  id: cp-oc-cli
+- apply:
+    component: rhtas-clis
+    label: Copy RHTAS CLIs
+  id: cp-rhtas-clis
+events:
+  preStart:
+    - cp-oc-cli
+    - cp-rhtas-clis
