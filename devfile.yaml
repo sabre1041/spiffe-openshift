@@ -31,8 +31,8 @@ components:
       value: "/projects/home"
     - name: HISTFILE
       value: "/projects/home/.sh_history"
-    - name: SPIFFE_ENDPOINT_SOCKET
-      value: /spiffe-workload-api/spire-agent.sock
+    # - name: SPIFFE_ENDPOINT_SOCKET
+    #   value: /spiffe-workload-api/spire-agent.sock
     volumeMounts:
     - name: home
       path: /projects/home
