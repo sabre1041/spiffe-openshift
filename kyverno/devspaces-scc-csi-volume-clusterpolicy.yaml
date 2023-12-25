@@ -1,0 +1,37 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: devspaces-csi-scc-volumes
+  annotations:
+    policies.kyverno.io/title: Enables the use of the csi volume type in SecurityContextConstraints
+    policies.kyverno.io/subject: SecurityContextConstraint
+    policies.kyverno.io/category: Other
+    policies.kyverno.io/description: >-
+      Adds the csi volume type to SecurityContextConstraints
+spec:
+  ## Currently broken due to https://github.com/kyverno/kyverno/issues/9133
+  # mutateExistingOnPolicyUpdate: true
+  rules:
+    - name: check-spiffe-pod-labels
+      match:
+        any:
+          - resources:
+              kinds:
+                - SecurityContextConstraints
+              names:
+                - container-build
+      preconditions:
+        all:
+          - key: csi
+            operator: AnyNotIn
+            value: "{{ request.object.volumes[]}}"
+            
+      mutate:
+        # targets:
+        #   - apiVersion: security.openshift.io/v1
+        #     kind: SecurityContextConstraints
+        #     name: container-build
+        patchesJson6902: |-
+          - op: add
+            path: '/volumes/-'
+            value: 'csi'
