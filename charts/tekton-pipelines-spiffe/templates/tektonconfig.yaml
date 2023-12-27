@@ -3,7 +3,7 @@ kind: TektonConfig
 metadata:
   name: config
   annotations:
-    argocd.argoproj.io/sync-options: Delete=false,ServerSideApply=true
+    argocd.argoproj.io/sync-options: Delete=false,ServerSideApply=true,SkipDryRunOnMissingResource=true
 spec:
   chain:
     artifacts.oci.storage: {{ .Values.chains.artifacts.oci.storage }}
@@ -19,3 +19,31 @@ spec:
     signers.x509.tuf.mirror.url: {{ required "TUF Address is Required" .Values.chains.signers.x509.tuf.mirror.url }}
     transparency.enabled: {{ .Values.chains.transparency.enabled | quote }}
     transparency.url: {{ required "Rekor Address is Required" .Values.chains.transparency.url }}
+    options:
+      disabled: false
+      deployments:
+        tekton-chains-controller:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: tekton-chains-controller
+                    env:
+                      - name: SPIFFE_ENDPOINT_SOCKET
+                        value: /spiffe-workload-api/spire-agent.sock
+                      - name: TUF_ROOT
+                        value: /tuf
+                    resources: {}
+                    volumeMounts:
+                      - mountPath: /spiffe-workload-api
+                        name: spiffe-workload-api
+                      - mountPath: /tuf
+                        name: tuf
+                volumes:
+                  - emptyDir: {}
+                    name: tuf
+                  - csi:
+                      driver: csi.spiffe.io
+                      readOnly: true
+                    name: spiffe-workload-api
+  targetNamespace: openshift-pipelines

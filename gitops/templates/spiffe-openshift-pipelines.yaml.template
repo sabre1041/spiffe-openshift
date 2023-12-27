@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openshift-pipelines-spiffe
+  namespace: ${OPENSHIFT_GITOPS_NAMESPACE}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: openshift-operators
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - helm:
+      values: |-
+        chains:
+          signers:
+            x509:
+              fulcio:
+                issuer: https://oidc-discovery.${OPENSHIFT_APPS_DOMAIN}
+                address: https://fulcio.${OPENSHIFT_APPS_DOMAIN}
+              tuf:
+                mirror:
+                  url: https://tuf.${OPENSHIFT_APPS_DOMAIN}
+          transparency:
+            url: https://rekor.${OPENSHIFT_APPS_DOMAIN}
+    path: charts/tekton-pipelines-spiffe
+    repoURL: ${REPOSITORY}
+    targetRevision: ${BRANCH}
+  - repoURL: ${REPOSITORY}
+    targetRevision: ${BRANCH}
+    path: manifests/pipelines/operator
+    directory:
+      recurse: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: -1
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 10m
