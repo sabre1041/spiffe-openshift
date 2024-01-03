@@ -1,0 +1,29 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: build-
+  namespace: demo
+spec:
+  params:
+    - name: deployment-name
+      value: pipelines-vote-api
+    - name: git-url
+      value: https://github.com/openshift/pipelines-vote-api.git
+    - name: IMAGE
+      value: <IMAGE_REGISTRY>/<NAMESPACE>/pipelines-vote-api
+    - name: fulcio-url
+      value: https://fulcio.${OPENSHIFT_APPS_DOMAIN}
+    - name: rekor-url
+      value: https://rekor.${OPENSHIFT_APPS_DOMAIN}
+    - name: oidc-issuer-url
+      value: https://oidc-discovery.${OPENSHIFT_APPS_DOMAIN}
+  pipelineRef:
+    name: build
+  taskRunTemplate:
+    serviceAccountName: pipeline
+  timeouts:
+    pipeline: 1h0m0s
+  workspaces:
+    - name: shared-workspace
+      persistentVolumeClaim:
+        claimName: build

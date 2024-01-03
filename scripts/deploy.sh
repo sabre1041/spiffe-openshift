@@ -86,7 +86,7 @@ if [[ -z "${OPENSHIFT_APPS_DOMAIN}" ]]; then
 fi
 
 # Install SPIRE CRD's Chart
-envsubst < ${SCRIPT_BASE_DIR}/templates/spire-crds-application.yaml.template | ${OC_TOOL} apply -n ${OPENSHIFT_GITOPS_NAMESPACE} -f-
+envsubst < ${SCRIPT_BASE_DIR}/../gitops/templates/spire-crds-application.yaml.template | ${OC_TOOL} apply -n ${OPENSHIFT_GITOPS_NAMESPACE} -f-
 
 if [[ $? -ne 0 ]]; then
     echo "Failed to create Spire CRD Application."
@@ -94,7 +94,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # Install SPIRE Chart
-envsubst < ${SCRIPT_BASE_DIR}/templates/spire-application.yaml.template | ${OC_TOOL} apply -n ${OPENSHIFT_GITOPS_NAMESPACE} -f-
+envsubst < ${SCRIPT_BASE_DIR}/../gitops/templates/spire-application.yaml.template | ${OC_TOOL} apply -n ${OPENSHIFT_GITOPS_NAMESPACE} -f-
 
 if [[ $? -ne 0 ]]; then
     echo "Failed to create Spire Application."

@@ -1,0 +1,70 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  annotations:
+    tekton.dev/categories: Security
+    tekton.dev/displayName: syft
+    tekton.dev/pipelines.minVersion: 0.12.1
+    tekton.dev/platforms: linux/amd64,linux/arm64
+    tekton.dev/tags: CLI, syft
+  name: syft
+spec:
+  description: CLI tool and library for generating a Software Bill of Materials from
+    container images and filesystem
+  params:
+  - description: The Arguments to be passed to Syft command.
+    name: SYFT_ARGS
+    type: array
+  - description: The Arguments to be passed to cosign command.
+    name: COSIGN_SCRIPT
+    type: string
+  - default: docker.io/anchore/syft@sha256:981086797ad3cb1be49d763ffaa50f2bd558c354358112f46283dd3bf8cb0c75
+    description: Syft image to be used
+    name: SYFT_IMAGE
+    type: string
+  - default: bitnami/cosign:latest
+    description: Cosing image to be used
+    name: COSIGN_IMAGE
+    type: string
+  - default: http://tuf-server.tuf-system.svc.cluster.local
+    description: Location of the TUF server
+    name: TUF_URL
+    type: string
+  steps:
+  - args:
+    - $(params.SYFT_ARGS)
+    image: $(params.SYFT_IMAGE)
+    name: syft
+    volumeMounts:
+    - mountPath: /attestation_tmp
+      name: tmp
+    - mountPath: /tmp
+      name: tmp-dir
+    workingDir: $(workspaces.source-dir.path)
+  - args:
+    - -c
+    - $(params.COSIGN_SCRIPT)
+    command:
+    - /bin/bash
+    env:
+    - name: SPIFFE_ENDPOINT_SOCKET
+      value: /spiffe-workload-api/spire-agent.sock
+    - name: TUF_URL
+      value: $(params.TUF_URL)
+    image: $(params.COSIGN_IMAGE)
+    name: cosign
+    volumeMounts:
+    - mountPath: /attestation_tmp
+      name: tmp
+    - mountPath: /spiffe-workload-api
+      name: spiffe-workload-api
+  volumes:
+  - name: tmp
+  - name: tmp-dir
+  - csi:
+      driver: csi.spiffe.io
+      readOnly: true
+    name: spiffe-workload-api
+  workspaces:
+  - name: source-dir
+    optional: true

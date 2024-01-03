@@ -83,8 +83,8 @@ if [[ -z "${OPENSHIFT_APPS_DOMAIN}" ]]; then
   OPENSHIFT_APPS_DOMAIN=$(${OC_TOOL} get cm -n openshift-config-managed  console-public -o go-template="{{ .data.consoleURL }}" | sed 's@https://@@; s/^[^.]*\.//')
 fi
 
-# Install SPIRE Chart
-envsubst < ${SCRIPT_BASE_DIR}/templates/spiffe-openshift-pipelines.yaml.template | ${OC_TOOL} apply -n ${OPENSHIFT_GITOPS_NAMESPACE} -f-
+# Install OpenShift Pipelines
+envsubst < ${SCRIPT_BASE_DIR}/../gitops/templates/spiffe-openshift-pipelines.yaml.template | ${OC_TOOL} apply -n ${OPENSHIFT_GITOPS_NAMESPACE} -f-
 
 if [[ $? -ne 0 ]]; then
     echo "Failed to create OpenShift Pipelines Application."

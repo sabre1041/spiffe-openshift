@@ -1,0 +1,117 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: build
+  namespace: demo
+spec:
+  params:
+  - description: name of the deployment to be patched
+    name: deployment-name
+    type: string
+  - description: url of the git repo for the code of deployment
+    name: git-url
+    type: string
+  - default: pipelines-1.8
+    description: revision to be used from repo of the code for deployment
+    name: git-revision
+    type: string
+  - description: image to be build from the code
+    name: IMAGE
+    type: string
+  - default: latest
+    description: image tag to be build from the code
+    name: IMAGE_TAG
+    type: string
+  - name: fulcio-url
+    type: string
+  - name: rekor-url
+    type: string
+  - name: oidc-issuer-url
+    type: string
+  - default: http://tuf-server.tuf-system.svc.cluster.local
+    name: tuf-url
+    type: string
+  results:
+  - description: the image url
+    name: IMAGE_URL
+    value: $(tasks.build-image.results.IMAGE_URL)
+  - description: the image digest
+    name: IMAGE_DIGEST
+    value: $(tasks.build-image.results.IMAGE_DIGEST)
+  tasks:
+  - name: fetch-repository
+    params:
+    - name: url
+      value: $(params.git-url)
+    - name: subdirectory
+      value: ""
+    - name: deleteExisting
+      value: "true"
+    - name: revision
+      value: $(params.git-revision)
+    taskRef:
+      kind: ClusterTask
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared-workspace
+  - name: build-image
+    params:
+    - name: IMAGE
+      value: $(params.IMAGE):$(params.IMAGE_TAG)
+    runAfter:
+    - fetch-repository
+    taskRef:
+      kind: ClusterTask
+      name: buildah
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: create-sbom
+    params:
+    - name: SYFT_ARGS
+      value:
+      - packages
+      - registry:$(params.IMAGE)@$(tasks.build-image.results.IMAGE_DIGEST)
+      - -o
+      - spdx-json
+      - --file
+      - /attestation_tmp/attestation.sbom
+    - name: COSIGN_SCRIPT
+      value: "cosign initialize --mirror=$TUF_URL --root=$TUF_URL/root.json\ncosign
+        attest $(params.IMAGE)@$(tasks.build-image.results.IMAGE_DIGEST) -y --fulcio-url=$(params.fulcio-url)
+        --rekor-url=$(params.rekor-url) --oidc-issuer=$(params.oidc-issuer-url) --predicate
+        /attestation_tmp/attestation.sbom --type spdxjson --attachment-tag-prefix
+        sbom-    \n"
+    - name: TUF_URL
+      value: $(params.tuf-url)
+    retries: 5
+    runAfter:
+    - build-image
+    taskRef:
+      kind: ClusterTask
+      name: syft
+  - name: create-vulnerability-attestation
+    params:
+    - name: GRYPE_ARGS
+      value:
+      - registry:$(params.IMAGE)@$(tasks.build-image.results.IMAGE_DIGEST)
+      - --file
+      - /attestation_tmp/attestation.sarif
+      - -o
+      - sarif
+    - name: COSIGN_SCRIPT
+      value: "cosign initialize --mirror=$TUF_URL --root=$TUF_URL/root.json\ncosign
+        attest $(params.IMAGE)@$(tasks.build-image.results.IMAGE_DIGEST) -y --fulcio-url=$(params.fulcio-url)
+        --rekor-url=$(params.rekor-url) --oidc-issuer=$(params.oidc-issuer-url) --predicate
+        /attestation_tmp/attestation.sarif --type vuln --attachment-tag-prefix sarif-
+        \   \n"
+    - name: TUF_URL
+      value: $(params.tuf-url)
+    runAfter:
+    - create-sbom
+    taskRef:
+      kind: ClusterTask
+      name: grype
+  workspaces:
+  - name: shared-workspace

@@ -1,0 +1,75 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  annotations:
+    tekton.dev/categories: Security
+    tekton.dev/displayName: grype
+    tekton.dev/pipelines.minVersion: 0.12.1
+    tekton.dev/platforms: linux/amd64,linux/arm64
+    tekton.dev/tags: CLI, grype
+  name: grype
+spec:
+  description: Task and library for scanning a SBOM and and creating an attestation
+  params:
+  - description: The Arguments to be passed to Syft command.
+    name: GRYPE_ARGS
+    type: array
+  - description: The Arguments to be passed to cosign command.
+    name: COSIGN_SCRIPT
+    type: string
+  - default: docker.io/anchore/grype:v0.56.0
+    description: Grype image to be used
+    name: GRYPE_IMAGE
+    type: string
+  - default: bitnami/cosign:latest
+    description: Cosing image to be used
+    name: COSIGN_IMAGE
+    type: string
+  - default: http://tuf-server.tuf-system.svc.cluster.local
+    description: Location of the TUF server
+    name: TUF_URL
+    type: string
+  steps:
+  - args:
+    - $(params.GRYPE_ARGS)
+    env:
+    - name: GRYPE_DB_CACHE_DIR
+      value: /tmp/.cache
+    image: $(params.GRYPE_IMAGE)
+    name: grype
+    volumeMounts:
+    - mountPath: /attestation_tmp
+      name: tmp
+    - mountPath: /tmp
+      name: tmp-dir
+    workingDir: $(workspaces.source-dir.path)
+  - args:
+    - -c
+    - $(params.COSIGN_SCRIPT)
+    command:
+    - /bin/bash
+    env:
+    - name: TUF_URL
+      value: $(params.TUF_URL)
+    - name: COSIGN_EXPERIMENTAL
+      value: "1"
+    - name: SPIFFE_ENDPOINT_SOCKET
+      value: /spiffe-workload-api/spire-agent.sock
+    image: $(params.COSIGN_IMAGE)
+    name: cosign
+    volumeMounts:
+    - mountPath: /attestation_tmp
+      name: tmp
+    - mountPath: /spiffe-workload-api
+      name: spiffe-workload-api
+      readOnly: true
+  volumes:
+  - name: tmp
+  - name: tmp-dir
+  - csi:
+      driver: csi.spiffe.io
+      readOnly: true
+    name: spiffe-workload-api
+  workspaces:
+  - name: source-dir
+    optional: true
