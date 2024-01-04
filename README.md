@@ -91,6 +91,12 @@ Once complete, confirm the `TaskRuns` in the `demo` namespace have the following
 * `chains.tekton.dev/signed`
 * `chains.tekton.dev/transparency`
 
+The certificate that was used to sign the `TaskRun` can be found by running the following command:
+
+```shell
+curl -Lk $(oc get taskrun -n demo $(oc get pipelinerun -n demo -o jsonpath='{ .items[*].status.childReferences[0].name }') -o jsonpath='{ .metadata.annotations.chains\.tekton\.dev/transparency }') | jq -r 'to_entries|.[0].value.body' |  base64 -d | jq -r '.spec.publicKey' | base64 -d | openssl x509 -text -noout
+```
+
 Finally, use Skopeo to confirm a signature has been generated and stored for the generated container image:
 
 ```shell
