@@ -1,0 +1,79 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spiffe-deployment-demo
+  namespace: ${OPENSHIFT_GITOPS_NAMESPACE}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: spiffe-demo
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: ${REPOSITORY}
+    targetRevision: ${BRANCH}
+    path: examples/deployment-demo
+    kustomize:
+      patches:
+        - patch: |-
+            - op: replace
+              path: /spec/template/spec/containers/0/env/2/value
+              value: https://oidc-discovery.${OPENSHIFT_APPS_DOMAIN}
+            - op: replace
+              path: /spec/template/spec/containers/0/env/3/value
+              value: https://fulcio.${OPENSHIFT_APPS_DOMAIN}
+            - op: replace
+              path: /spec/template/spec/containers/0/env/4/value
+              value: https://tuf.${OPENSHIFT_APPS_DOMAIN}
+            - op: replace
+              path: /spec/template/spec/containers/0/env/5/value
+              value: https://rekor.${OPENSHIFT_APPS_DOMAIN}
+            - op: replace
+              path: /spec/template/spec/containers/0/env/6/value
+              value: https://tuf.${OPENSHIFT_APPS_DOMAIN}
+            - op: replace
+              path: /spec/template/spec/containers/0/env/7/value
+              value: https://tuf.${OPENSHIFT_APPS_DOMAIN}/root.json
+            - op: replace
+              path: /spec/template/spec/containers/0/env/8/value
+              value: https://oidc-discovery.${OPENSHIFT_APPS_DOMAIN}
+            - op: replace
+              path: /spec/template/spec/containers/0/env/9/value
+              value: https://fulcio.${OPENSHIFT_APPS_DOMAIN}
+            - op: replace
+              path: /spec/template/spec/containers/0/env/10/value
+              value: https://oidc-discovery.${OPENSHIFT_APPS_DOMAIN}
+            - op: replace
+              path: /spec/template/spec/containers/0/env/11/value
+              value: https://rekor.${OPENSHIFT_APPS_DOMAIN}
+            - op: replace
+              path: /spec/template/spec/containers/0/env/12/value
+              value: https://rekor.${OPENSHIFT_APPS_DOMAIN}
+            - op: replace
+              path: /spec/template/spec/containers/0/env/13/value
+              value: https://oidc-discovery.${OPENSHIFT_APPS_DOMAIN}
+            - op: replace
+              path: /spec/template/spec/containers/0/env/14/value
+              value: https://rekor.${OPENSHIFT_APPS_DOMAIN}
+            - op: replace
+              path: /spec/template/spec/containers/0/env/15/value
+              value: https://fulcio.${OPENSHIFT_APPS_DOMAIN}
+          target:
+            kind: Deployment
+            name: spiffe-demo
+  syncPolicy:
+    automated: 
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ApplyOutOfSyncOnly=true
+    - RespectIgnoreDifferences=true
+    retry:
+      limit: -1
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 10m 
