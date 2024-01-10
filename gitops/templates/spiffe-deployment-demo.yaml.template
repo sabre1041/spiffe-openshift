@@ -60,6 +60,9 @@ spec:
             - op: replace
               path: /spec/template/spec/containers/0/env/15/value
               value: https://fulcio.${OPENSHIFT_APPS_DOMAIN}
+            - op: replace
+              path: /spec/template/spec/containers/0/env/19/value
+              value: ${OPENSHIFT_APPS_DOMAIN}
           target:
             kind: Deployment
             name: spiffe-demo

@@ -80,6 +80,8 @@ spec:
           value: rhtas@redhat.com
         - name: COSIGN_YES
           value: "true"
+        - name: OPENSHIFT_APPS_DOMAIN
+          value: apps.rhtas.openshift.io
         image: registry.redhat.io/web-terminal/web-terminal-tooling-rhel8@sha256:6133a6b42b1448bc0b636f21a5018df24703bba49c8449806f056f77c7f07f26
         imagePullPolicy: IfNotPresent
         name: spiffe-demo
