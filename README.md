@@ -24,6 +24,32 @@ To deploy the SPIRE CRD and SPIRE Helm Chart, execute the following command:
 
 Login to Argo CD and confirm both Applications have synchronized successfully and that the `spire-system` and `spire-server` projects have been created and that all pods are active.
 
+## RHTAS Demo Deployment
+
+To both verify and demonstrate the capabilities provided by the integration between SPIFFE/SPIRE deployment and Red Hat Trusted Artifact Signer (RHTAS), an example workload can be deployed to act as an environment to utilize tooling related to the [sigstore project](https://www.sigstore.dev).
+
+### Prerequisites
+
+The deployment of SPIFFE/SPIRE as documented in the prior section must be completed beforehand as well as the deployment of RHTAS with SPIFFE/SPIRE support.
+
+### Deployment
+
+Execute the following command which will deploy an Argo CD Application which will create a new namespace `spiffe-demo` and a `Deployment` that is configured with the necessary development tooling included and configured with RHTAS support:
+
+```shell
+./scripts/deploy-spiffe-deployment-demo.sh
+```
+
+### Usage
+
+To be able to demonstrate leverage the tooling that was just deployed, obtain a remote session in the Deployment:
+
+```shell
+oc rsh -n spiffe-demo deployment/spiffe-demo
+```
+
+All of the RHTAS binary artifacts including common development tooling including `git` and `helm` are included and the environment has been initialized, so it is ready for immediate use.
+
 ## OpenShift Pipelines / Tekton Chains
 
 Automation is available to facilitate the deployment and integration with OpenShift Pipelines and [Tekton Chains](https://docs.openshift.com/pipelines/1.13/secure/using-tekton-chains-for-openshift-pipelines-supply-chain-security.html).

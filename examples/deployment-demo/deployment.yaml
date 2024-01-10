@@ -27,6 +27,7 @@ spec:
         - /bin/bash
         - -c
         - |
+            # Setup Git Configuration
             git config --global init.defaultBranch main
             git config --global user.name "RHTAS User"
             git config --global user.email "rhtas@redhat.com"
@@ -34,6 +35,11 @@ spec:
             git config --global tag.gpgsign true
             git config --global gpg.x509.program gitsign
             git config --global gpg.format x509
+
+            # Initialize cosign
+            cosign initialize
+
+            # Sleep
             while true; do sleep 5; done
         env:
         - name: PATH

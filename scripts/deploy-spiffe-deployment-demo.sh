@@ -6,7 +6,7 @@ export OPENSHIFT_APPS_DOMAIN=""
 export OPENSHIFT_GITOPS_NAMESPACE="openshift-gitops"
 
 export REPOSITORY="https://github.com/sabre1041/spiffe-openshift.git"
-export BRANCH="deployment-demo"
+export BRANCH="sigstore"
 OC_TOOL="oc"
 
 function display_help {
