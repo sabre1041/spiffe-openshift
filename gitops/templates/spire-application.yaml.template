@@ -14,7 +14,6 @@ spec:
   - helm:
       valueFiles:
       - ${DOLLAR}values/examples/production/values.yaml
-      - ${DOLLAR}values/examples/openshift/openshift-values.yaml
       - ${DOLLAR}values/examples/tornjak/values.yaml
       - ${DOLLAR}values/examples/tornjak/values-ingress.yaml
       values: |-
@@ -29,6 +28,7 @@ spec:
             namespaces:
               system:
                 create: true
+          openshift: true
         spire-server:
           ca_subject:
             country: US
@@ -38,6 +38,9 @@ spec:
             enabled: true
         spiffe-oidc-discovery-provider:
           enable: true
+          tls:
+            spire:
+              enabled: false
           ingress:
             enabled: true
     path: charts/spire
