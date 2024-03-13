@@ -59,10 +59,40 @@ components:
     args:
       - '-c'
       - >-
-        mkdir -p /projects/home/bin && gunzip -c /var/www/html/clients/linux/cosign.gz > /projects/home/bin/cosign && chmod +x /projects/home/bin/cosign && gunzip -c /var/www/html/clients/linux/gitsign.gz > /projects/home/bin/gitsign && chmod +x /projects/home/bin/gitsign && gunzip -c /var/www/html/clients/linux/rekor-cli.gz > /projects/home/bin/rekor-cli && chmod +x /projects/home/bin/rekor-cli
+        mkdir -p /projects/home/bin && cp -vf /opt/app-root/src/clients/linux/cosign-amd64.gz /projects/home/bin/cosign.gz && cp -vf /opt/app-root/src/clients/linux/gitsign-amd64.gz /projects/home/bin/gitsign.gz
     command:
       - /bin/bash
-    image: quay.io/redhat-user-workloads/rhtas-tenant/rhtas-stack-1-0-beta/client-server:57947b4ffed92ff3082f6fac01aabd2c69ba4c2d
+    image: quay.io/redhat-user-workloads/rhtas-tenant/cli/client-server-cg@sha256:5c7e83f13f9ba52c927bcb86abb5f9efa8ca4fe9ab7031709bde7f48829f6d0f
+    sourceMapping: /projects
+    mountSources: true
+    memoryLimit: 256M
+    volumeMounts:
+    - name: home
+      path: /projects/home
+- name: rhtas-clis-server
+  container:
+    args:
+      - '-c'
+      - >-
+        mkdir -p /projects/home/bin && cp -vf /opt/app-root/src/clients/linux/rekor-cli-amd64.gz /projects/home/bin/rekor-cli.gz
+    command:
+      - /bin/bash
+    image: quay.io/redhat-user-workloads/rhtas-tenant/cli/client-server-re@sha256:d20c57b457650a025c225863462b2f9bf193ca35534dbf2cfcd9f6ab07a091b9
+    sourceMapping: /projects
+    mountSources: true
+    memoryLimit: 256M
+    volumeMounts:
+    - name: home
+      path: /projects/home
+- name: rhtas-clis-unzip
+  container:
+    args:
+      - '-c'
+      - >-
+        mkdir -p /projects/home/bin && ls -l /projects/home/bin && gunzip -c /projects/home/bin/cosign.gz > /projects/home/bin/cosign && chmod +x /projects/home/bin/cosign && rm -f /projects/home/bin/cosign.gz && gunzip -c /projects/home/bin/gitsign.gz > /projects/home/bin/gitsign && chmod +x /projects/home/bin/gitsign && rm -f /projects/home/bin/gitsign.gz && gunzip -c /projects/home/bin/rekor-cli.gz > /projects/home/bin/rekor-cli && chmod +x /projects/home/bin/rekor-cli && rm -f /projects/home/bin/rekor-cli.gz
+    command:
+      - /bin/bash
+    image: registry.access.redhat.com/ubi9/toolbox@sha256:47d4891b3e744f5622a31bd21a42dd51358c43bbfd44860cc05c7b29cc520e66
     sourceMapping: /projects
     mountSources: true
     memoryLimit: 256M
@@ -78,7 +108,17 @@ commands:
     component: rhtas-clis
     label: Copy RHTAS CLIs
   id: cp-rhtas-clis
+- apply:
+    component: rhtas-clis-server
+    label: Copy RHTAS Server CLIs
+  id: cp-rhtas-clis-server
+- apply:
+    component: rhtas-clis-unzip
+    label: Unzip RHTAS CLIs
+  id: cp-rhtas-clis-unzip
 events:
   preStart:
     - cp-oc-cli
     - cp-rhtas-clis
+    - cp-rhtas-clis-server
+    - cp-rhtas-clis-unzip
