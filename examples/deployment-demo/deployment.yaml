@@ -82,7 +82,7 @@ spec:
           value: "true"
         - name: OPENSHIFT_APPS_DOMAIN
           value: apps.rhtas.openshift.io
-        image: registry.redhat.io/web-terminal/web-terminal-tooling-rhel8@sha256:6133a6b42b1448bc0b636f21a5018df24703bba49c8449806f056f77c7f07f26
+        image: registry.redhat.io/web-terminal/web-terminal-tooling-rhel8@sha256:f0a9e35023c83041e98fb18db0a740b6912d421f956cca0cad3e66bdfd6cf450
         imagePullPolicy: IfNotPresent
         name: spiffe-demo
         resources: {}
@@ -98,14 +98,36 @@ spec:
       - command:
         - /bin/bash
         - -c
-        - mkdir -p /var/tools/bin && gunzip -c /var/www/html/clients/linux/cosign.gz
-          >  /var/tools/bin/cosign && chmod +x  /var/tools/bin/cosign && gunzip -c
-          /var/www/html/clients/linux/gitsign.gz >  /var/tools/bin/gitsign && chmod
-          +x  /var/tools/bin/gitsign && gunzip -c /var/www/html/clients/linux/rekor-cli.gz
-          >  /var/tools/bin/rekor-cli && chmod +x /var/tools/bin/rekor-cli
-        image: quay.io/redhat-user-workloads/rhtas-tenant/rhtas-stack-1-0-beta/client-server@sha256:e822c2813f414a4649c44f5a837f00243862d7f5370ebd87572aa671bcdf07a5
+        - mkdir -p /var/tools/bin && cp -vf /opt/app-root/src/clients/linux/cosign-amd64.gz /var/tools/bin/cosign.gz && cp -vf /opt/app-root/src/clients/linux/gitsign-amd64.gz /var/tools/bin/gitsign.gz
+        image: quay.io/redhat-user-workloads/rhtas-tenant/cli/client-server-cg@sha256:5c7e83f13f9ba52c927bcb86abb5f9efa8ca4fe9ab7031709bde7f48829f6d0f
         imagePullPolicy: IfNotPresent
         name: rhtas-clis
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/tools
+          name: tools
+      - command:
+        - /bin/bash
+        - -c
+        - mkdir -p /var/tools/bin && cp -vf /opt/app-root/src/clients/linux/rekor-cli-amd64.gz /var/tools/bin/rekor-cli.gz
+        image: quay.io/redhat-user-workloads/rhtas-tenant/cli/client-server-re@sha256:d20c57b457650a025c225863462b2f9bf193ca35534dbf2cfcd9f6ab07a091b9
+        imagePullPolicy: IfNotPresent
+        name: rhtas-clis-server
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/tools
+          name: tools
+      - command:
+        - /bin/bash
+        - -c
+        - mkdir -p /var/tools/bin && ls -l /var/tools/bin && gunzip -c /var/tools/bin/cosign.gz > /var/tools/bin/cosign && chmod +x /var/tools/bin/cosign && rm -f //var/tools/bin/cosign.gz && gunzip -c /var/tools/bin/gitsign.gz > /var/tools/bin/gitsign && chmod +x /var/tools/bin/gitsign && rm -f /var/tools/bin/gitsign.gz && gunzip -c /var/tools/bin/rekor-cli.gz > /var/tools/bin/rekor-cli && chmod +x /var/tools/bin/rekor-cli && rm -f /var/tools/bin/rekor-cli.gz
+        image: registry.access.redhat.com/ubi9/toolbox@sha256:47d4891b3e744f5622a31bd21a42dd51358c43bbfd44860cc05c7b29cc520e66
+        imagePullPolicy: IfNotPresent
+        name: rhtas-clis-unzip
         resources: {}
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
